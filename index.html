@@ -13,8 +13,10 @@
     label { font-size:0.85rem; display:block; margin-bottom:3px; }
     input[type="text"], input[type="number"] { width:100%; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
     button { padding:8px 10px; border-radius:8px; border:none; font-size:0.9rem; cursor:pointer; margin:2px 0; }
-    button.primary { background:#007bff; color:white; width:100%; }
+    button.primary { background:#007bff; color:white; }
     button.secondary { background:#e0e0e0; }
+    button.small { font-size:0.8rem; padding:6px 8px; }
+    .button-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
     .item-list { display:flex; flex-wrap:wrap; gap:6px; max-height:260px; overflow-y:auto; }
     .item-btn { flex:1 0 calc(50% - 6px); background:#fff; border:1px solid #ddd; border-radius:10px; padding:8px; text-align:center; font-size:0.9rem; position:relative; }
     .item-name { font-weight:600; display:block; }
@@ -52,8 +54,15 @@
     <input type="text" id="itemName" placeholder="Artikelname">
     <label for="itemPrice">Preis in Euro (z.B. 2.50)</label>
     <input type="number" id="itemPrice" step="0.01" min="0" placeholder="0.00">
-    <button class="primary" id="addItemBtn">Artikel speichern</button>
-    <div class="small">Artikel werden im Browser dieses Geräts gespeichert.</div>
+    <button class="primary" style="width:100%;" id="addItemBtn">Artikel speichern</button>
+    <div class="button-row">
+      <button class="secondary small" id="exportItemsBtn">Artikel exportieren</button>
+      <button class="secondary small" id="importItemsBtn">Artikel importieren</button>
+    </div>
+    <div class="small">
+      Artikel werden im Browser dieses Geräts gespeichert.<br>
+      Über Export/Import kannst du die Artikelliste auf andere Geräte übertragen.
+    </div>
   </div>
 
   <div class="card">
@@ -292,9 +301,44 @@
     renderCart();
   }
 
+  // --- Export / Import der Artikel ---
+  function exportItems() {
+    if (!items || items.length === 0) {
+      alert("Keine Artikel vorhanden zum Exportieren.");
+      return;
+    }
+    const data = JSON.stringify(items);
+    prompt("Artikel-Daten (kopieren und auf anderem Gerät einfügen):", data);
+  }
+
+  function importItems() {
+    const data = prompt("Bitte die exportierten Artikel-Daten hier einfügen.\nAchtung: vorhandene Artikel werden überschrieben.");
+    if (!data) return;
+    try {
+      const imported = JSON.parse(data);
+      if (!Array.isArray(imported)) throw new Error("Kein Array");
+      // einfache Plausibilitätsprüfung
+      imported.forEach(it => {
+        if (typeof it.name !== "string" || typeof it.price !== "number") {
+          throw new Error("Ungültiger Artikel");
+        }
+      });
+      items = imported;
+      saveItems(items);
+      cart = {};
+      renderItems();
+      renderCart();
+      alert("Artikel wurden erfolgreich importiert.");
+    } catch (e) {
+      alert("Import fehlgeschlagen. Daten waren ungültig.");
+    }
+  }
+
   document.getElementById("addItemBtn").addEventListener("click", addNewItem);
   document.getElementById("clearCartBtn").addEventListener("click", clearCart);
   document.getElementById("bookSaleBtn").addEventListener("click", bookSale);
+  document.getElementById("exportItemsBtn").addEventListener("click", exportItems);
+  document.getElementById("importItemsBtn").addEventListener("click", importItems);
 
   renderDate();
   renderItems();
