@@ -9,9 +9,12 @@
     body { margin:0; padding:10px; background:#f5f5f5; }
     h1 { font-size:1.4rem; text-align:center; margin-bottom:10px; }
     h2 { font-size:1.1rem; margin:12px 0 6px; }
+    h3 { font-size:0.95rem; margin:6px 0; }
     .card { background:white; border-radius:10px; padding:10px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
     label { font-size:0.85rem; display:block; margin-bottom:3px; }
-    input[type="text"], input[type="number"] { width:100%; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #ccc; font-size:1rem; }
+    input[type="text"], input[type="number"], select {
+      width:100%; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #ccc; font-size:1rem;
+    }
     button { padding:8px 10px; border-radius:8px; border:none; font-size:0.9rem; cursor:pointer; margin:2px 0; }
     button.primary { background:#007bff; color:white; }
     button.secondary { background:#e0e0e0; }
@@ -37,6 +40,8 @@
     .log-list { max-height:150px; overflow-y:auto; font-size:0.85rem; }
     .log-entry { border-bottom:1px solid #eee; padding:3px 0; }
     .log-time { color:#666; font-size:0.8rem; }
+    .category-block { margin-bottom:8px; }
+    .category-header { display:flex; align-items:center; justify-content:space-between; }
   </style>
 </head>
 <body>
@@ -58,9 +63,14 @@
   <div class="card hidden" id="adminPanel">
     <h2>Artikel anlegen (Admin)</h2>
     <label for="itemName">Name</label>
-    <input type="text" id="itemName" placeholder="z.B. Bier, Spritzer, Cola">
+    <input type="text" id="itemName" placeholder="z.B. Bier, Leberkässemmel">
     <label for="itemPrice">Preis in €</label>
     <input type="number" id="itemPrice" step="0.01" min="0" placeholder="z.B. 2.50">
+    <label for="itemCategory">Kategorie</label>
+    <select id="itemCategory">
+      <option value="Trinken">Trinken</option>
+      <option value="Essen">Essen</option>
+    </select>
     <button class="primary" style="width:100%;" id="addItemBtn">Artikel speichern</button>
 
     <div class="button-row">
@@ -75,7 +85,21 @@
   <!-- Artikel -->
   <div class="card">
     <h2>Artikel auswählen</h2>
-    <div class="item-list" id="itemList"></div>
+
+    <div class="category-block">
+      <div class="category-header">
+        <h3>🥤 Trinken</h3>
+      </div>
+      <div class="item-list" id="itemListDrinks"></div>
+    </div>
+
+    <div class="category-block">
+      <div class="category-header">
+        <h3>🍽️ Essen</h3>
+      </div>
+      <div class="item-list" id="itemListFood"></div>
+    </div>
+
     <div class="button-row">
       <button class="secondary small" id="importItemsBtn">Artikel importieren</button>
     </div>
@@ -123,6 +147,7 @@
   const PIN = "1111"; // Admin-PIN
   const STORAGE_ITEMS_KEY = "kasse_items_v1";
   const STORAGE_SALES_KEY_PREFIX = "kasse_sales_"; // + YYYY-MM-DD
+  const CATEGORIES = ["Trinken", "Essen"];
 
   let isAdmin = false;
   let items = loadItems();
@@ -138,17 +163,34 @@
     return new Date().toISOString().slice(0,10);
   }
 
+  function normalizeItem(item) {
+    // Sicherstellen, dass eine gültige Kategorie vorhanden ist
+    if (!item.category || !CATEGORIES.includes(item.category)) {
+      item.category = "Trinken"; // Standard
+    }
+    return item;
+  }
+
   function loadItems() {
     const raw = localStorage.getItem(STORAGE_ITEMS_KEY);
+    let list;
     if (!raw) {
-      return [
-        { id: 1, name: "Bier", price: 3.50 },
-        { id: 2, name: "Spritzer", price: 2.70 },
-        { id: 3, name: "Cola", price: 2.50 },
-        { id: 4, name: "Tee ohne", price: 1.70 }
+      list = [
+        { id: 1, name: "Bier", price: 3.50, category: "Trinken" },
+        { id: 2, name: "Spritzer", price: 2.70, category: "Trinken" },
+        { id: 3, name: "Cola", price: 2.50, category: "Trinken" },
+        { id: 4, name: "Tee ohne", price: 1.70, category: "Trinken" },
+        { id: 5, name: "Almdudler", price: 2.50, category: "Trinken" },
+        { id: 6, name: "Kekse", price: 2.50, category: "Essen" }
       ];
+    } else {
+      try {
+        list = JSON.parse(raw);
+      } catch {
+        list = [];
+      }
     }
-    try { return JSON.parse(raw); } catch { return []; }
+    return list.map(normalizeItem);
   }
 
   function saveItems(items) {
@@ -237,34 +279,52 @@
   }
 
   // ===== Artikel-Rendering =====
+  function createItemElement(item) {
+    const div = document.createElement("div");
+    div.className = "item-btn";
+    div.innerHTML = `
+      <span class="item-name">${item.name}</span>
+      <span class="item-price">${formatEuro(item.price)}</span>
+      <span class="edit-icon" style="display:${isAdmin ? 'inline' : 'none'};">⚙️</span>
+    `;
+
+    div.addEventListener("click", (e) => {
+      if (e.target.classList.contains("edit-icon")) {
+        if (isAdmin) editOrDeleteItem(item);
+      } else {
+        addToCart(item); // alle dürfen verbuchen
+      }
+    });
+
+    return div;
+  }
+
   function renderItems() {
-    const container = document.getElementById("itemList");
-    container.innerHTML = "";
+    const drinksContainer = document.getElementById("itemListDrinks");
+    const foodContainer   = document.getElementById("itemListFood");
+    drinksContainer.innerHTML = "";
+    foodContainer.innerHTML   = "";
 
     if (items.length === 0) {
-      container.innerHTML = '<div class="small">Noch keine Artikel angelegt.</div>';
+      drinksContainer.innerHTML = '<div class="small">Noch keine Artikel angelegt.</div>';
+      foodContainer.innerHTML   = '';
       return;
     }
 
-    items.forEach(item => {
-      const div = document.createElement("div");
-      div.className = "item-btn";
-      div.innerHTML = `
-        <span class="item-name">${item.name}</span>
-        <span class="item-price">${formatEuro(item.price)}</span>
-        <span class="edit-icon" style="display:${isAdmin ? 'inline' : 'none'};">⚙️</span>
-      `;
+    const drinks = items.filter(it => it.category === "Trinken");
+    const food   = items.filter(it => it.category === "Essen");
 
-      div.addEventListener("click", (e) => {
-        if (e.target.classList.contains("edit-icon")) {
-          if (isAdmin) editOrDeleteItem(item);
-        } else {
-          addToCart(item); // alle dürfen verbuchen
-        }
-      });
+    if (drinks.length === 0) {
+      drinksContainer.innerHTML = '<div class="small">Keine Getränke angelegt.</div>';
+    } else {
+      drinks.forEach(item => drinksContainer.appendChild(createItemElement(item)));
+    }
 
-      container.appendChild(div);
-    });
+    if (food.length === 0) {
+      foodContainer.innerHTML = '<div class="small">Keine Speisen angelegt.</div>';
+    } else {
+      food.forEach(item => foodContainer.appendChild(createItemElement(item)));
+    }
   }
 
   // ===== Artikel anlegen / bearbeiten (nur Admin) =====
@@ -275,18 +335,23 @@
     }
     const nameInput = document.getElementById("itemName");
     const priceInput = document.getElementById("itemPrice");
+    const categorySelect = document.getElementById("itemCategory");
+
     const name = nameInput.value.trim();
     const price = parseFloat((priceInput.value || "").replace(",", "."));
+    const category = categorySelect.value;
 
     if (!name) return alert("Bitte einen Artikelnamen eingeben.");
     if (isNaN(price) || price < 0) return alert("Bitte einen gültigen Preis eingeben.");
+    if (!CATEGORIES.includes(category)) return alert("Bitte eine gültige Kategorie wählen.");
 
     const maxId = items.reduce((m,it)=>Math.max(m,it.id||0),0);
-    const newItem = { id:maxId+1, name, price };
+    const newItem = { id:maxId+1, name, price, category };
     items.push(newItem);
     saveItems(items);
     nameInput.value = "";
     priceInput.value = "";
+    categorySelect.value = "Trinken";
     renderItems();
     updateAdminUI();
   }
@@ -316,6 +381,14 @@
     if (isNaN(priceValue) || priceValue < 0) {
       alert("Ungültiger Preis, keine Änderung.");
       return;
+    }
+
+    const newCategory = prompt("Kategorie (Trinken/Essen):", item.category || "Trinken");
+    const catClean = (newCategory || "").trim();
+    if (!CATEGORIES.includes(catClean)) {
+      alert("Ungültige Kategorie, es bleibt bei: " + item.category);
+    } else {
+      item.category = catClean;
     }
 
     item.name = newName.trim();
@@ -430,8 +503,9 @@
         if (typeof it.name !== "string" || typeof it.price !== "number") {
           throw new Error("Ungültiger Artikel");
         }
+        normalizeItem(it);
       });
-      items = imported;
+      items = imported.map(normalizeItem);
       saveItems(items);
       cart = {};
       renderItems();
