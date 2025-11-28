@@ -54,9 +54,9 @@
     </div>
   </div>
 
-  <!-- Admin-Bereich: Artikel anlegen + Export/Import -->
+  <!-- Admin-Bereich: Artikel anlegen + Export -->
   <div class="card hidden" id="adminPanel">
-    <h2>Artikel anlegen</h2>
+    <h2>Artikel anlegen (Admin)</h2>
     <label for="itemName">Name</label>
     <input type="text" id="itemName" placeholder="z.B. Bier, Spritzer, Cola">
     <label for="itemPrice">Preis in €</label>
@@ -64,12 +64,11 @@
     <button class="primary" style="width:100%;" id="addItemBtn">Artikel speichern</button>
 
     <div class="button-row">
-      <button class="secondary small" id="exportItemsBtn">Artikel exportieren</button>
-      <button class="secondary small" id="importItemsBtn">Artikel importieren</button>
+      <button class="secondary small" id="exportItemsBtn">Artikel exportieren (Admin)</button>
     </div>
     <div class="small">
       Artikel werden im Browser dieses Geräts gespeichert.<br>
-      Über Export/Import kannst du dieselbe Liste auf andere Geräte bringen.
+      Über Export kannst du die Liste an andere Handys schicken.
     </div>
   </div>
 
@@ -77,7 +76,14 @@
   <div class="card">
     <h2>Artikel auswählen</h2>
     <div class="item-list" id="itemList"></div>
-    <div class="small">Tippen = in Warenkorb, ⚙️ = bearbeiten/löschen (nur Admin).</div>
+    <div class="button-row">
+      <button class="secondary small" id="importItemsBtn">Artikel importieren</button>
+    </div>
+    <div class="small">
+      Tippen = in Warenkorb.<br>
+      ⚙️ = bearbeiten/löschen (nur Admin).<br>
+      „Artikel importieren“ funktioniert immer (z.B. Liste vom Chef einfügen).
+    </div>
   </div>
 
   <!-- Warenkorb -->
@@ -404,7 +410,7 @@
     renderLog();
   }
 
-  // ===== Export / Import (nur Admin sinnvoll, aber technisch egal) =====
+  // ===== Export / Import =====
   function exportItems() {
     if (!items || items.length === 0) {
       alert("Keine Artikel zum Exportieren.");
