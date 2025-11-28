@@ -23,6 +23,20 @@
     .item-price { font-size:0.8rem; color:#555; }
     .edit-icon { position:absolute; top:5px; right:5px; font-size:16px; cursor:pointer; }
     .hidden { display:none !important; }
+
+    .cart-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
+    .cart-table th, .cart-table td { padding:4px; }
+    .cart-table th { border-bottom:1px solid #ddd; text-align:left; }
+    .cart-table td:last-child, .cart-table th:last-child { text-align:right; }
+    .cart-actions { display:flex; gap:6px; margin-top:8px; }
+    .cart-actions button { flex:1; }
+    .summary { font-size:0.95rem; }
+    .summary strong { font-size:1.1rem; }
+    .small { font-size:0.8rem; color:#555; }
+    .badge { display:inline-block; padding:2px 6px; border-radius:999px; font-size:0.75rem; background:#eee; margin-left:4px; }
+    .log-list { max-height:150px; overflow-y:auto; font-size:0.85rem; }
+    .log-entry { border-bottom:1px solid #eee; padding:3px 0; }
+    .log-time { color:#666; font-size:0.8rem; }
   </style>
 </head>
 <body>
@@ -32,72 +46,150 @@
     <div class="summary">
       <div>Datum: <span id="dateText"></span></div>
       <div>Heutiger Tagesumsatz: <strong id="dayTotal">0,00 €</strong></div>
-      <div class="small">Dieses System ist nur eine Hilfe und keine gesetzliche Registrierkasse.</div>
+      <div class="small">Dieses System ist eine einfache Hilfe und keine gesetzliche Registrierkasse.</div>
     </div>
-    <button class="secondary small" id="adminLoginBtn">🔐 Admin Login</button>
-    <button class="secondary small hidden" id="adminLogoutBtn">🚪 Logout</button>
+    <div class="button-row">
+      <button class="secondary small" id="adminLoginBtn">🔐 Admin Login</button>
+      <button class="secondary small hidden" id="adminLogoutBtn">🚪 Logout</button>
+    </div>
   </div>
 
-  <!-- Admin-Bereich: Artikel anlegen -->
-  <div class="card admin-only hidden" id="adminPanel">
+  <!-- Admin-Bereich: Artikel anlegen + Export/Import -->
+  <div class="card hidden" id="adminPanel">
     <h2>Artikel anlegen</h2>
     <label for="itemName">Name</label>
-    <input type="text" id="itemName" placeholder="z.B. Bier, Spritzer">
+    <input type="text" id="itemName" placeholder="z.B. Bier, Spritzer, Cola">
     <label for="itemPrice">Preis in €</label>
     <input type="number" id="itemPrice" step="0.01" min="0" placeholder="z.B. 2.50">
     <button class="primary" style="width:100%;" id="addItemBtn">Artikel speichern</button>
+
     <div class="button-row">
       <button class="secondary small" id="exportItemsBtn">Artikel exportieren</button>
       <button class="secondary small" id="importItemsBtn">Artikel importieren</button>
     </div>
+    <div class="small">
+      Artikel werden im Browser dieses Geräts gespeichert.<br>
+      Über Export/Import kannst du dieselbe Liste auf andere Geräte bringen.
+    </div>
   </div>
 
-  <!-- Artikel anzeigen -->
+  <!-- Artikel -->
   <div class="card">
     <h2>Artikel auswählen</h2>
     <div class="item-list" id="itemList"></div>
-    <div class="small">Tippen = in Warenkorb, ⚙️ = bearbeiten (nur Admin).</div>
+    <div class="small">Tippen = in Warenkorb, ⚙️ = bearbeiten/löschen (nur Admin).</div>
+  </div>
+
+  <!-- Warenkorb -->
+  <div class="card">
+    <h2>Warenkorb</h2>
+    <table class="cart-table">
+      <thead>
+        <tr>
+          <th>Artikel</th>
+          <th>Menge</th>
+          <th>Summe</th>
+        </tr>
+      </thead>
+      <tbody id="cartBody">
+        <tr><td colspan="3" class="small">Noch keine Artikel im Warenkorb.</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:6px;">
+      <strong>Gesamt: <span id="cartTotal">0,00 €</span></strong>
+    </div>
+    <div class="cart-actions">
+      <button class="secondary" id="clearCartBtn">Warenkorb leeren</button>
+      <button class="primary" id="bookSaleBtn">Verkauf buchen</button>
+    </div>
+  </div>
+
+  <!-- Buchungen -->
+  <div class="card">
+    <h2>Heutige Buchungen</h2>
+    <div class="log-list" id="logList">
+      <div class="small">Noch keine Buchungen heute.</div>
+    </div>
   </div>
 
 <script>
-  // ==== BASIS-FUNKTIONEN ====
-  let isAdmin = false;  // wird per PIN aktiviert
-
-  const PIN = "1111";  // HIER PIN ÄNDERN WENN DU WILLST !!
-
+  // ===== Einstellungen & Storage Keys =====
+  const PIN = "1111"; // Admin-PIN
   const STORAGE_ITEMS_KEY = "kasse_items_v1";
+  const STORAGE_SALES_KEY_PREFIX = "kasse_sales_"; // + YYYY-MM-DD
+
+  let isAdmin = false;
+  let items = loadItems();
+  let cart = {};
+  let salesToday = loadSalesForToday();
+
+  // ===== Helper =====
+  function formatEuro(value) {
+    return value.toFixed(2).replace('.', ',') + " €";
+  }
+
+  function getTodayKey() {
+    return new Date().toISOString().slice(0,10);
+  }
 
   function loadItems() {
     const raw = localStorage.getItem(STORAGE_ITEMS_KEY);
-    return raw ? JSON.parse(raw) : [];
+    if (!raw) {
+      return [
+        { id: 1, name: "Bier", price: 3.50 },
+        { id: 2, name: "Spritzer", price: 2.70 },
+        { id: 3, name: "Cola", price: 2.50 },
+        { id: 4, name: "Tee ohne", price: 1.70 }
+      ];
+    }
+    try { return JSON.parse(raw); } catch { return []; }
   }
 
   function saveItems(items) {
     localStorage.setItem(STORAGE_ITEMS_KEY, JSON.stringify(items));
   }
 
-  let items = loadItems();
+  function loadSalesForToday() {
+    const key = STORAGE_SALES_KEY_PREFIX + getTodayKey();
+    const raw = localStorage.getItem(key);
+    if (!raw) return { total: 0, entries: [] };
+    try { return JSON.parse(raw); } catch { return { total: 0, entries: [] }; }
+  }
 
-  // ==== ADMIN UI UPDATEN ====
+  function saveSalesForToday(data) {
+    const key = STORAGE_SALES_KEY_PREFIX + getTodayKey();
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  // ===== Admin-UI =====
   function updateAdminUI() {
-    document.getElementById("adminPanel").classList.toggle("hidden", !isAdmin);
-    document.getElementById("adminLogoutBtn").classList.toggle("hidden", !isAdmin);
-    document.getElementById("adminLoginBtn").classList.toggle("hidden", isAdmin);
-    
-    // Hide edit icons if not admin
+    const adminPanel = document.getElementById("adminPanel");
+    const loginBtn = document.getElementById("adminLoginBtn");
+    const logoutBtn = document.getElementById("adminLogoutBtn");
+
+    if (isAdmin) {
+      adminPanel.classList.remove("hidden");
+      logoutBtn.classList.remove("hidden");
+      loginBtn.classList.add("hidden");
+    } else {
+      adminPanel.classList.add("hidden");
+      logoutBtn.classList.add("hidden");
+      loginBtn.classList.remove("hidden");
+    }
+
+    // Edit-Icons ein/ausblenden
     document.querySelectorAll(".edit-icon").forEach(icon => {
-      icon.style.visibility = isAdmin ? "visible" : "hidden";
+      icon.style.display = isAdmin ? "inline" : "none";
     });
   }
 
-  // ==== LOGIN / LOGOUT ====
   document.getElementById("adminLoginBtn").addEventListener("click", () => {
     const entered = prompt("Admin-PIN eingeben:");
     if (entered === PIN) {
       isAdmin = true;
       updateAdminUI();
     } else {
-      alert("Falscher PIN!");
+      alert("Falscher PIN.");
     }
   });
 
@@ -106,13 +198,45 @@
     updateAdminUI();
   });
 
-  // ==== ARTIKEL-ANZEIGE ====
+  // ===== Datum & Tagesumsatz & Log =====
+  function renderDate() {
+    const dateText = document.getElementById("dateText");
+    const today = new Date();
+    const options = { weekday:"short", day:"2-digit", month:"2-digit", year:"numeric" };
+    dateText.textContent = today.toLocaleDateString("de-AT", options);
+  }
+
+  function renderDayTotal() {
+    document.getElementById("dayTotal").textContent = formatEuro(salesToday.total);
+  }
+
+  function renderLog() {
+    const container = document.getElementById("logList");
+    container.innerHTML = "";
+    if (!salesToday.entries || salesToday.entries.length === 0) {
+      container.innerHTML = '<div class="small">Noch keine Buchungen heute.</div>';
+      return;
+    }
+    salesToday.entries.slice().reverse().forEach(entry => {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+      const time = new Date(entry.time);
+      const timeStr = time.toLocaleTimeString("de-AT",{hour:"2-digit",minute:"2-digit"});
+      div.innerHTML = `
+        <div><strong>${formatEuro(entry.total)}</strong> <span class="badge">${entry.items.length} Pos.</span></div>
+        <div class="log-time">${timeStr}</div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  // ===== Artikel-Rendering =====
   function renderItems() {
     const container = document.getElementById("itemList");
     container.innerHTML = "";
 
     if (items.length === 0) {
-      container.innerHTML = '<div class="small">Keine Artikel gespeichert.</div>';
+      container.innerHTML = '<div class="small">Noch keine Artikel angelegt.</div>';
       return;
     }
 
@@ -121,82 +245,211 @@
       div.className = "item-btn";
       div.innerHTML = `
         <span class="item-name">${item.name}</span>
-        <span class="item-price">${item.price.toFixed(2)} €</span>
-        <span class="edit-icon" style="visibility:${isAdmin ? 'visible' : 'hidden'};">⚙️</span>
+        <span class="item-price">${formatEuro(item.price)}</span>
+        <span class="edit-icon" style="display:${isAdmin ? 'inline' : 'none'};">⚙️</span>
       `;
+
       div.addEventListener("click", (e) => {
-        if (e.target.classList.contains("edit-icon") && isAdmin) {
-          editItem(item);
+        if (e.target.classList.contains("edit-icon")) {
+          if (isAdmin) editOrDeleteItem(item);
         } else {
-          addToCart(item);
+          addToCart(item); // alle dürfen verbuchen
         }
       });
+
       container.appendChild(div);
     });
   }
 
-  // ==== ADMIN FUNKTIONEN ====
-  function addItem() {
-    const name = document.getElementById("itemName").value.trim();
-    const price = parseFloat(document.getElementById("itemPrice").value);
+  // ===== Artikel anlegen / bearbeiten (nur Admin) =====
+  function addNewItem() {
+    if (!isAdmin) {
+      alert("Artikel ändern nur im Admin-Modus (PIN).");
+      return;
+    }
+    const nameInput = document.getElementById("itemName");
+    const priceInput = document.getElementById("itemPrice");
+    const name = nameInput.value.trim();
+    const price = parseFloat((priceInput.value || "").replace(",", "."));
 
-    if (!name || isNaN(price)) return alert("Name und Preis eingeben!");
-    items.push({ id: Date.now(), name, price });
+    if (!name) return alert("Bitte einen Artikelnamen eingeben.");
+    if (isNaN(price) || price < 0) return alert("Bitte einen gültigen Preis eingeben.");
+
+    const maxId = items.reduce((m,it)=>Math.max(m,it.id||0),0);
+    const newItem = { id:maxId+1, name, price };
+    items.push(newItem);
     saveItems(items);
+    nameInput.value = "";
+    priceInput.value = "";
     renderItems();
+    updateAdminUI();
   }
 
-  function editItem(item) {
+  function editOrDeleteItem(item) {
+    if (!isAdmin) {
+      alert("Artikel bearbeiten nur im Admin-Modus (PIN).");
+      return;
+    }
     const newName = prompt("Neuer Name (leer lassen zum Löschen):", item.name);
     if (newName === null) return;
 
     if (newName.trim() === "") {
-      // löschen
-      items = items.filter(i => i.id !== item.id);
-    } else {
-      const newPrice = prompt("Neuer Preis (€):", item.price);
-      const priceValue = parseFloat(newPrice.replace(",", "."));
-      if (isNaN(priceValue)) return alert("Ungültiger Preis!");
-      item.name = newName.trim();
-      item.price = priceValue;
+      if (confirm("Diesen Artikel wirklich löschen?")) {
+        items = items.filter(it => it.id !== item.id);
+        saveItems(items);
+        if (cart[item.id]) { delete cart[item.id]; renderCart(); }
+        renderItems();
+        updateAdminUI();
+      }
+      return;
     }
+
+    const newPrice = prompt("Neuer Preis (€):", item.price.toString().replace(".", ","));
+    if (newPrice === null) return;
+    const priceValue = parseFloat(newPrice.replace(",", "."));
+    if (isNaN(priceValue) || priceValue < 0) {
+      alert("Ungültiger Preis, keine Änderung.");
+      return;
+    }
+
+    item.name = newName.trim();
+    item.price = priceValue;
     saveItems(items);
     renderItems();
+    renderCart();
+    updateAdminUI();
   }
 
-  // ==== CART ====
-  let cart = {};
+  // ===== Warenkorb =====
+  function renderCart() {
+    const tbody = document.getElementById("cartBody");
+    const totalSpan = document.getElementById("cartTotal");
+    const entries = Object.values(cart);
+
+    if (entries.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="3" class="small">Noch keine Artikel im Warenkorb.</td></tr>';
+      totalSpan.textContent = "0,00 €";
+      return;
+    }
+
+    tbody.innerHTML = "";
+    let total = 0;
+
+    entries.forEach(entry => {
+      const lineTotal = entry.item.price * entry.qty;
+      total += lineTotal;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${entry.item.name}</td>
+        <td>
+          <button class="secondary" style="padding:2px 6px;" data-action="minus">-</button>
+          <span style="margin:0 4px;">${entry.qty}</span>
+          <button class="secondary" style="padding:2px 6px;" data-action="plus">+</button>
+        </td>
+        <td>${formatEuro(lineTotal)}</td>
+      `;
+
+      tr.querySelector('[data-action="minus"]').addEventListener("click", () => {
+        if (entry.qty > 1) entry.qty--; else delete cart[entry.item.id];
+        renderCart();
+      });
+
+      tr.querySelector('[data-action="plus"]').addEventListener("click", () => {
+        entry.qty++; renderCart();
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    totalSpan.textContent = formatEuro(total);
+  }
+
   function addToCart(item) {
     if (!cart[item.id]) cart[item.id] = { item, qty:0 };
     cart[item.id].qty++;
     renderCart();
   }
 
-  function renderCart() {
-    // Simplified → nur zum Testen
-    console.log(cart);
+  function clearCart() {
+    cart = {};
+    renderCart();
   }
 
-  // ==== EXPORT / IMPORT ====
-  document.getElementById("exportItemsBtn")?.addEventListener("click", () => {
-    const data = JSON.stringify(items);
-    prompt("Artikel kopieren:", data);
-  });
-
-  document.getElementById("importItemsBtn")?.addEventListener("click", () => {
-    const data = prompt("Exportierten Text einfügen:");
-    try {
-      items = JSON.parse(data);
-      saveItems(items);
-      renderItems();
-    } catch {
-      alert("Fehler beim Import!");
+  function bookSale() {
+    const entries = Object.values(cart);
+    if (entries.length === 0) {
+      alert("Warenkorb ist leer.");
+      return;
     }
-  });
 
-  document.getElementById("addItemBtn")?.addEventListener("click", addItem);
+    let total = 0;
+    const itemsBooked = entries.map(e => {
+      const line = e.item.price * e.qty;
+      total += line;
+      return { name:e.item.name, price:e.item.price, qty:e.qty, total:line };
+    });
 
+    salesToday.total += total;
+    if (!salesToday.entries) salesToday.entries = [];
+    salesToday.entries.push({
+      time: new Date().toISOString(),
+      total: total,
+      items: itemsBooked
+    });
+
+    saveSalesForToday(salesToday);
+    clearCart();
+    renderDayTotal();
+    renderLog();
+  }
+
+  // ===== Export / Import (nur Admin sinnvoll, aber technisch egal) =====
+  function exportItems() {
+    if (!items || items.length === 0) {
+      alert("Keine Artikel zum Exportieren.");
+      return;
+    }
+    const data = JSON.stringify(items);
+    prompt("Artikel-Daten kopieren und am anderen Gerät importieren:", data);
+  }
+
+  function importItems() {
+    const data = prompt("Exportierte Artikel-Daten hier einfügen.\nAchtung: vorhandene Artikel werden überschrieben.");
+    if (!data) return;
+    try {
+      const imported = JSON.parse(data);
+      if (!Array.isArray(imported)) throw new Error("Kein Array");
+      imported.forEach(it => {
+        if (typeof it.name !== "string" || typeof it.price !== "number") {
+          throw new Error("Ungültiger Artikel");
+        }
+      });
+      items = imported;
+      saveItems(items);
+      cart = {};
+      renderItems();
+      renderCart();
+      updateAdminUI();
+      alert("Artikel erfolgreich importiert.");
+    } catch (e) {
+      alert("Import fehlgeschlagen. Daten ungültig.");
+    }
+  }
+
+  // ===== Events =====
+  document.getElementById("addItemBtn").addEventListener("click", addNewItem);
+  document.getElementById("clearCartBtn").addEventListener("click", clearCart);
+  document.getElementById("bookSaleBtn").addEventListener("click", bookSale);
+  document.getElementById("exportItemsBtn").addEventListener("click", exportItems);
+  document.getElementById("importItemsBtn").addEventListener("click", importItems);
+
+  // ===== Initial =====
+  renderDate();
   renderItems();
+  renderCart();
+  renderDayTotal();
+  renderLog();
   updateAdminUI();
 </script>
 </body>
