@@ -2,26 +2,102 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Vereinskasse</title>
+  <title>Vereinskasse – Sportunion St. Georgen/Leys</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-    body { margin:0; padding:10px; background:#f5f5f5; }
-    h1 { font-size:1.4rem; text-align:center; margin-bottom:10px; }
+    body {
+      margin:0; padding:10px;
+      background: radial-gradient(circle at top, #e9ffe9 0, #f5f5f5 45%, #f5f5f5 100%);
+    }
+
+    .app-header {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background: linear-gradient(135deg, #1e824c, #38b000);
+      color:white;
+      padding:10px;
+      border-radius:14px;
+      box-shadow:0 3px 8px rgba(0,0,0,0.18);
+      margin-bottom:10px;
+    }
+    .app-logo {
+      width:48px; height:48px;
+      border-radius:50%;
+      background:white;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      flex-shrink:0;
+    }
+    .app-logo img { width:100%; height:100%; object-fit:contain; }
+    .app-title-main { font-size:1.1rem; font-weight:700; line-height:1.2; }
+    .app-title-sub { font-size:0.8rem; opacity:0.9; }
+
     h2 { font-size:1.1rem; margin:12px 0 6px; }
     h3 { font-size:0.95rem; margin:6px 0; }
-    .card { background:white; border-radius:10px; padding:10px; margin-bottom:10px; box-shadow:0 2px 4px rgba(0,0,0,0.08); }
+
+    .card {
+      background:white;
+      border-radius:10px;
+      padding:10px;
+      margin-bottom:10px;
+      box-shadow:0 2px 4px rgba(0,0,0,0.08);
+      border-top: 3px solid #1e824c;
+    }
     label { font-size:0.85rem; display:block; margin-bottom:3px; }
     input[type="text"], input[type="number"], select {
-      width:100%; padding:8px; margin-bottom:6px; border-radius:6px; border:1px solid #ccc; font-size:1rem;
+      width:100%; padding:8px; margin-bottom:6px;
+      border-radius:6px; border:1px solid #c5e1c5; font-size:1rem;
+      background:#f9fff9;
     }
-    button { padding:8px 10px; border-radius:8px; border:none; font-size:0.9rem; cursor:pointer; margin:2px 0; }
-    button.primary { background:#007bff; color:white; }
-    button.secondary { background:#e0e0e0; }
-    button.small { font-size:0.8rem; padding:6px 8px; }
+
+    button {
+      padding:8px 10px;
+      border-radius:999px;
+      border:none;
+      font-size:0.9rem;
+      cursor:pointer;
+      margin:2px 0;
+      transition: transform 0.05s ease, box-shadow 0.05s ease, opacity 0.1s;
+    }
+    button:active {
+      transform:scale(0.97);
+      box-shadow:0 1px 2px rgba(0,0,0,0.2) inset;
+      opacity:0.85;
+    }
+    button.primary {
+      background:#1e824c;
+      color:white;
+      box-shadow:0 2px 4px rgba(30,130,76,0.35);
+    }
+    button.secondary {
+      background:#e0f3e0;
+      color:#145a32;
+    }
+    button.small { font-size:0.8rem; padding:6px 10px; }
     .button-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-    .item-list { display:flex; flex-wrap:wrap; gap:6px; max-height:260px; overflow-y:auto; }
-    .item-btn { flex:1 0 calc(50% - 6px); background:#fff; border:1px solid #ddd; border-radius:10px; padding:8px; text-align:center; font-size:0.9rem; position:relative; }
+
+    .item-list {
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      max-height:260px;
+      overflow-y:auto;
+    }
+    .item-btn {
+      flex:1 0 calc(50% - 6px);
+      background:#ffffff;
+      border:1px solid #d4ecd4;
+      border-radius:10px;
+      padding:8px;
+      text-align:center;
+      font-size:0.9rem;
+      position:relative;
+    }
+    .item-btn:hover { background:#f4fff4; }
     .item-name { font-weight:600; display:block; }
     .item-price { font-size:0.8rem; color:#555; }
     .edit-icon { position:absolute; top:5px; right:5px; font-size:16px; cursor:pointer; }
@@ -29,23 +105,58 @@
 
     .cart-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
     .cart-table th, .cart-table td { padding:4px; }
-    .cart-table th { border-bottom:1px solid #ddd; text-align:left; }
-    .cart-table td:last-child, .cart-table th:last-child { text-align:right; }
+    .cart-table th {
+      border-bottom:1px solid #ddd;
+      text-align:left;
+      background:#e9f7ef;
+    }
+    .cart-table td:last-child,
+    .cart-table th:last-child { text-align:right; }
+
     .cart-actions { display:flex; gap:6px; margin-top:8px; }
     .cart-actions button { flex:1; }
+
     .summary { font-size:0.95rem; }
     .summary strong { font-size:1.1rem; }
     .small { font-size:0.8rem; color:#555; }
-    .badge { display:inline-block; padding:2px 6px; border-radius:999px; font-size:0.75rem; background:#eee; margin-left:4px; }
+    .badge {
+      display:inline-block;
+      padding:2px 6px;
+      border-radius:999px;
+      font-size:0.75rem;
+      background:#e9f7ef;
+      margin-left:4px;
+    }
     .log-list { max-height:150px; overflow-y:auto; font-size:0.85rem; }
     .log-entry { border-bottom:1px solid #eee; padding:3px 0; }
     .log-time { color:#666; font-size:0.8rem; }
     .category-block { margin-bottom:8px; }
-    .category-header { display:flex; align-items:center; justify-content:space-between; }
+    .category-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:4px;
+    }
+    .category-header h3 { margin:0; }
+    .category-pill {
+      font-size:0.75rem;
+      padding:2px 8px;
+      border-radius:999px;
+      background:#e0f3e0;
+      color:#145a32;
+    }
   </style>
 </head>
 <body>
-  <h1>Vereinskasse</h1>
+  <header class="app-header">
+    <div class="app-logo">
+      <img src="wappen.png" alt="Vereinswappen">
+    </div>
+    <div>
+      <div class="app-title-main">Vereinskasse</div>
+      <div class="app-title-sub">Sportunion St. Georgen an der Leys – Sektion Tennis</div>
+    </div>
+  </header>
 
   <div class="card">
     <div class="summary">
@@ -59,11 +170,10 @@
     </div>
   </div>
 
-  <!-- Admin-Bereich: Artikel anlegen + Export -->
   <div class="card hidden" id="adminPanel">
     <h2>Artikel anlegen (Admin)</h2>
     <label for="itemName">Name</label>
-    <input type="text" id="itemName" placeholder="z.B. Bier, Leberkässemmel">
+    <input type="text" id="itemName" placeholder="z.B. Bier, Brandflecken">
     <label for="itemPrice">Preis in €</label>
     <input type="number" id="itemPrice" step="0.01" min="0" placeholder="z.B. 2.50">
     <label for="itemCategory">Kategorie</label>
@@ -75,20 +185,22 @@
 
     <div class="button-row">
       <button class="secondary small" id="exportItemsBtn">Artikel exportieren (Admin)</button>
+      <button class="secondary small" id="profileCodeBtn">Profil-Code erzeugen</button>
     </div>
     <div class="small">
       Artikel werden im Browser dieses Geräts gespeichert.<br>
-      Über Export kannst du die Liste an andere Handys schicken.
+      Über Export kannst du die Liste als JSON teilen.<br>
+      Über „Profil-Code erzeugen“ bekommst du Code für PROFILES oben im Skript.
     </div>
   </div>
 
-  <!-- Artikel -->
   <div class="card">
     <h2>Artikel auswählen</h2>
 
     <div class="category-block">
       <div class="category-header">
         <h3>🥤 Trinken</h3>
+        <span class="category-pill">Getränke</span>
       </div>
       <div class="item-list" id="itemListDrinks"></div>
     </div>
@@ -96,6 +208,7 @@
     <div class="category-block">
       <div class="category-header">
         <h3>🍽️ Essen</h3>
+        <span class="category-pill">Snacks & Speisen</span>
       </div>
       <div class="item-list" id="itemListFood"></div>
     </div>
@@ -106,11 +219,11 @@
     <div class="small">
       Tippen = in Warenkorb.<br>
       ⚙️ = bearbeiten/löschen (nur Admin).<br>
-      „Artikel importieren“ funktioniert immer (z.B. Liste vom Chef einfügen).
+      Beim Import kannst du ENTWEDER den langen Text einfügen<br>
+      ODER einfach <strong>stockschiessen</strong> (oder dein eigenes Profil) eintippen.
     </div>
   </div>
 
-  <!-- Warenkorb -->
   <div class="card">
     <h2>Warenkorb</h2>
     <table class="cart-table">
@@ -134,7 +247,6 @@
     </div>
   </div>
 
-  <!-- Buchungen -->
   <div class="card">
     <h2>Heutige Buchungen</h2>
     <div class="log-list" id="logList">
@@ -143,30 +255,48 @@
   </div>
 
 <script>
-  // ===== Einstellungen & Storage Keys =====
-  const PIN = "1111"; // Admin-PIN
+  const PIN = "1111";
   const STORAGE_ITEMS_KEY = "kasse_items_v1";
-  const STORAGE_SALES_KEY_PREFIX = "kasse_sales_"; // + YYYY-MM-DD
+  const STORAGE_SALES_KEY_PREFIX = "kasse_sales_";
   const CATEGORIES = ["Trinken", "Essen"];
+
+  // Profile (kannst du erweitern!)
+  const PROFILES = {
+    "stockschiessen": [
+      {"id":1,"name":"Bier","price":3.5,"category":"Trinken"},
+      {"id":2,"name":"Spritzer","price":2.9,"category":"Trinken"},
+      {"id":8,"name":"Holler Spritzer","price":2.9,"category":"Trinken"},
+      {"id":9,"name":"Limo","price":2.6,"category":"Trinken"},
+      {"id":10,"name":"Tee mit","price":2.8,"category":"Trinken"},
+      {"id":11,"name":"Tee ohne","price":1.7,"category":"Trinken"},
+      {"id":12,"name":"Kaffee","price":2.5,"category":"Trinken"},
+      {"id":13,"name":"Glühwein","price":4,"category":"Trinken"},
+      {"id":14,"name":"Eieraufschlag","price":2.8,"category":"Trinken"},
+      {"id":15,"name":"Kinderpunsch","price":2.5,"category":"Trinken"},
+      {"id":16,"name":"Brandflecken","price":3.9,"category":"Essen"},
+      {"id":17,"name":"Speckbrot","price":3,"category":"Essen"},
+      {"id":18,"name":"Bratlfettenbrot","price":2.5,"category":"Essen"},
+      {"id":19,"name":"Zwiebelschmalzbrot","price":2.5,"category":"Essen"},
+      {"id":20,"name":"Kekse","price":2.8,"category":"Essen"}
+    ]
+  };
+  // auch mit ß erlauben
+  PROFILES["stockschießen"] = PROFILES["stockschiessen"];
 
   let isAdmin = false;
   let items = loadItems();
   let cart = {};
   let salesToday = loadSalesForToday();
 
-  // ===== Helper =====
   function formatEuro(value) {
     return value.toFixed(2).replace('.', ',') + " €";
   }
-
   function getTodayKey() {
     return new Date().toISOString().slice(0,10);
   }
-
   function normalizeItem(item) {
-    // Sicherstellen, dass eine gültige Kategorie vorhanden ist
     if (!item.category || !CATEGORIES.includes(item.category)) {
-      item.category = "Trinken"; // Standard
+      item.category = "Trinken";
     }
     return item;
   }
@@ -175,24 +305,12 @@
     const raw = localStorage.getItem(STORAGE_ITEMS_KEY);
     let list;
     if (!raw) {
-      list = [
-        { id: 1, name: "Bier", price: 3.50, category: "Trinken" },
-        { id: 2, name: "Spritzer", price: 2.70, category: "Trinken" },
-        { id: 3, name: "Cola", price: 2.50, category: "Trinken" },
-        { id: 4, name: "Tee ohne", price: 1.70, category: "Trinken" },
-        { id: 5, name: "Almdudler", price: 2.50, category: "Trinken" },
-        { id: 6, name: "Kekse", price: 2.50, category: "Essen" }
-      ];
+      list = [];
     } else {
-      try {
-        list = JSON.parse(raw);
-      } catch {
-        list = [];
-      }
+      try { list = JSON.parse(raw); } catch { list = []; }
     }
     return list.map(normalizeItem);
   }
-
   function saveItems(items) {
     localStorage.setItem(STORAGE_ITEMS_KEY, JSON.stringify(items));
   }
@@ -203,13 +321,11 @@
     if (!raw) return { total: 0, entries: [] };
     try { return JSON.parse(raw); } catch { return { total: 0, entries: [] }; }
   }
-
   function saveSalesForToday(data) {
     const key = STORAGE_SALES_KEY_PREFIX + getTodayKey();
     localStorage.setItem(key, JSON.stringify(data));
   }
 
-  // ===== Admin-UI =====
   function updateAdminUI() {
     const adminPanel = document.getElementById("adminPanel");
     const loginBtn = document.getElementById("adminLoginBtn");
@@ -225,7 +341,6 @@
       loginBtn.classList.remove("hidden");
     }
 
-    // Edit-Icons ein/ausblenden
     document.querySelectorAll(".edit-icon").forEach(icon => {
       icon.style.display = isAdmin ? "inline" : "none";
     });
@@ -240,24 +355,20 @@
       alert("Falscher PIN.");
     }
   });
-
   document.getElementById("adminLogoutBtn").addEventListener("click", () => {
     isAdmin = false;
     updateAdminUI();
   });
 
-  // ===== Datum & Tagesumsatz & Log =====
   function renderDate() {
     const dateText = document.getElementById("dateText");
     const today = new Date();
     const options = { weekday:"short", day:"2-digit", month:"2-digit", year:"numeric" };
     dateText.textContent = today.toLocaleDateString("de-AT", options);
   }
-
   function renderDayTotal() {
     document.getElementById("dayTotal").textContent = formatEuro(salesToday.total);
   }
-
   function renderLog() {
     const container = document.getElementById("logList");
     container.innerHTML = "";
@@ -278,7 +389,6 @@
     });
   }
 
-  // ===== Artikel-Rendering =====
   function createItemElement(item) {
     const div = document.createElement("div");
     div.className = "item-btn";
@@ -287,15 +397,13 @@
       <span class="item-price">${formatEuro(item.price)}</span>
       <span class="edit-icon" style="display:${isAdmin ? 'inline' : 'none'};">⚙️</span>
     `;
-
     div.addEventListener("click", (e) => {
       if (e.target.classList.contains("edit-icon")) {
         if (isAdmin) editOrDeleteItem(item);
       } else {
-        addToCart(item); // alle dürfen verbuchen
+        addToCart(item);
       }
     });
-
     return div;
   }
 
@@ -306,7 +414,7 @@
     foodContainer.innerHTML   = "";
 
     if (items.length === 0) {
-      drinksContainer.innerHTML = '<div class="small">Noch keine Artikel angelegt.</div>';
+      drinksContainer.innerHTML = '<div class="small">Noch keine Artikel angelegt oder importiert.</div>';
       foodContainer.innerHTML   = '';
       return;
     }
@@ -327,7 +435,6 @@
     }
   }
 
-  // ===== Artikel anlegen / bearbeiten (nur Admin) =====
   function addNewItem() {
     if (!isAdmin) {
       alert("Artikel ändern nur im Admin-Modus (PIN).");
@@ -399,7 +506,6 @@
     updateAdminUI();
   }
 
-  // ===== Warenkorb =====
   function renderCart() {
     const tbody = document.getElementById("cartBody");
     const totalSpan = document.getElementById("cartTotal");
@@ -449,12 +555,10 @@
     cart[item.id].qty++;
     renderCart();
   }
-
   function clearCart() {
     cart = {};
     renderCart();
   }
-
   function bookSale() {
     const entries = Object.values(cart);
     if (entries.length === 0) {
@@ -483,7 +587,6 @@
     renderLog();
   }
 
-  // ===== Export / Import =====
   function exportItems() {
     if (!items || items.length === 0) {
       alert("Keine Artikel zum Exportieren.");
@@ -493,11 +596,56 @@
     prompt("Artikel-Daten kopieren und am anderen Gerät importieren:", data);
   }
 
+  // NEU: Profil-Code Generator
+  function generateProfileCode() {
+    if (!items || items.length === 0) {
+      alert("Keine Artikel vorhanden – zuerst Artikel anlegen oder importieren.");
+      return;
+    }
+    const name = prompt("Profilname (z.B. stockschiessen2, weihnachtsmarkt):");
+    if (!name) return;
+
+    let key = name.trim().toLowerCase();
+    key = key.replace("ß","ss").replace(/[^a-z0-9]/g,""); // nur a-z0-9
+
+    if (!key) {
+      alert("Ungültiger Profilname.");
+      return;
+    }
+
+    const snippet = `"${key}": ${JSON.stringify(items, null, 2)}`;
+    prompt(
+      "Diesen Code kopieren und oben im Skript bei PROFILES einfügen:",
+      snippet
+    );
+  }
+
   function importItems() {
-    const data = prompt("Exportierte Artikel-Daten hier einfügen.\nAchtung: vorhandene Artikel werden überschrieben.");
+    const data = prompt(
+      "Entweder:\n" +
+      "• exportierten Text einfügen\n" +
+      "ODER\n" +
+      "• Profil-Kennwort eingeben (z.B. stockschiessen)\n\n" +
+      "Achtung: vorhandene Artikel werden überschrieben."
+    );
     if (!data) return;
+
+    const trimmed = data.trim();
+    const key = trimmed.toLowerCase();
+
+    if (PROFILES[key]) {
+      items = PROFILES[key].map(it => normalizeItem({ ...it }));
+      saveItems(items);
+      cart = {};
+      renderItems();
+      renderCart();
+      updateAdminUI();
+      alert('Artikelprofil "' + trimmed + '" wurde geladen.');
+      return;
+    }
+
     try {
-      const imported = JSON.parse(data);
+      const imported = JSON.parse(trimmed);
       if (!Array.isArray(imported)) throw new Error("Kein Array");
       imported.forEach(it => {
         if (typeof it.name !== "string" || typeof it.price !== "number") {
@@ -513,18 +661,17 @@
       updateAdminUI();
       alert("Artikel erfolgreich importiert.");
     } catch (e) {
-      alert("Import fehlgeschlagen. Daten ungültig.");
+      alert("Import fehlgeschlagen. Entweder Profilname falsch oder JSON ungültig.");
     }
   }
 
-  // ===== Events =====
   document.getElementById("addItemBtn").addEventListener("click", addNewItem);
   document.getElementById("clearCartBtn").addEventListener("click", clearCart);
   document.getElementById("bookSaleBtn").addEventListener("click", bookSale);
   document.getElementById("exportItemsBtn").addEventListener("click", exportItems);
   document.getElementById("importItemsBtn").addEventListener("click", importItems);
+  document.getElementById("profileCodeBtn").addEventListener("click", generateProfileCode);
 
-  // ===== Initial =====
   renderDate();
   renderItems();
   renderCart();
