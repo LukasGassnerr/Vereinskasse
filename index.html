@@ -6,16 +6,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+
     body {
-      margin:0; padding:10px;
-      background: radial-gradient(circle at top, #e9ffe9 0, #f5f5f5 45%, #f5f5f5 100%);
+      margin:0;
+      padding:10px;
+      /* Blaue Hintergrund-Stimmung */
+      background: radial-gradient(circle at top, #e6f0ff 0, #f5f7fb 45%, #f5f7fb 100%);
     }
 
+    /* Header mit Wappen und Vereinsfarben (Blau) */
     .app-header {
       display:flex;
       align-items:center;
       gap:10px;
-      background: linear-gradient(135deg, #1e824c, #38b000);
+      background: linear-gradient(135deg, #003b80, #0066c7);
       color:white;
       padding:10px;
       border-radius:14px;
@@ -23,7 +27,8 @@
       margin-bottom:10px;
     }
     .app-logo {
-      width:48px; height:48px;
+      width:52px;
+      height:52px;
       border-radius:50%;
       background:white;
       display:flex;
@@ -31,10 +36,22 @@
       justify-content:center;
       overflow:hidden;
       flex-shrink:0;
+      box-shadow:0 0 0 2px rgba(0,0,0,0.1);
     }
-    .app-logo img { width:100%; height:100%; object-fit:contain; }
-    .app-title-main { font-size:1.1rem; font-weight:700; line-height:1.2; }
-    .app-title-sub { font-size:0.8rem; opacity:0.9; }
+    .app-logo img {
+      width:100%;
+      height:100%;
+      object-fit:contain;
+    }
+    .app-title-main {
+      font-size:1.1rem;
+      font-weight:700;
+      line-height:1.2;
+    }
+    .app-title-sub {
+      font-size:0.8rem;
+      opacity:0.9;
+    }
 
     h2 { font-size:1.1rem; margin:12px 0 6px; }
     h3 { font-size:0.95rem; margin:6px 0; }
@@ -44,14 +61,20 @@
       border-radius:10px;
       padding:10px;
       margin-bottom:10px;
-      box-shadow:0 2px 4px rgba(0,0,0,0.08);
-      border-top: 3px solid #1e824c;
+      box-shadow:0 2px 4px rgba(0,0,0,0.06);
+      border-top: 3px solid #003b80;
     }
+
     label { font-size:0.85rem; display:block; margin-bottom:3px; }
+
     input[type="text"], input[type="number"], select {
-      width:100%; padding:8px; margin-bottom:6px;
-      border-radius:6px; border:1px solid #c5e1c5; font-size:1rem;
-      background:#f9fff9;
+      width:100%;
+      padding:8px;
+      margin-bottom:6px;
+      border-radius:6px;
+      border:1px solid #c4d6f3;
+      font-size:1rem;
+      background:#f5f8ff;
     }
 
     button {
@@ -69,16 +92,22 @@
       opacity:0.85;
     }
     button.primary {
-      background:#1e824c;
+      background:#0050b8;
       color:white;
-      box-shadow:0 2px 4px rgba(30,130,76,0.35);
+      box-shadow:0 2px 4px rgba(0,80,184,0.35);
     }
     button.secondary {
-      background:#e0f3e0;
-      color:#145a32;
+      background:#e0ebff;
+      color:#123055;
     }
     button.small { font-size:0.8rem; padding:6px 10px; }
-    .button-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+
+    .button-row {
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+      margin-top:4px;
+    }
 
     .item-list {
       display:flex;
@@ -90,25 +119,32 @@
     .item-btn {
       flex:1 0 calc(50% - 6px);
       background:#ffffff;
-      border:1px solid #d4ecd4;
+      border:1px solid #d1ddf5;
       border-radius:10px;
       padding:8px;
       text-align:center;
       font-size:0.9rem;
       position:relative;
     }
-    .item-btn:hover { background:#f4fff4; }
+    .item-btn:hover { background:#f1f5ff; }
     .item-name { font-weight:600; display:block; }
     .item-price { font-size:0.8rem; color:#555; }
-    .edit-icon { position:absolute; top:5px; right:5px; font-size:16px; cursor:pointer; }
+    .edit-icon {
+      position:absolute;
+      top:5px;
+      right:5px;
+      font-size:16px;
+      cursor:pointer;
+    }
+
     .hidden { display:none !important; }
 
     .cart-table { width:100%; border-collapse:collapse; font-size:0.9rem; }
     .cart-table th, .cart-table td { padding:4px; }
     .cart-table th {
-      border-bottom:1px solid #ddd;
+      border-bottom:1px solid #d0dbf3;
       text-align:left;
-      background:#e9f7ef;
+      background:#e4ecff;
     }
     .cart-table td:last-child,
     .cart-table th:last-child { text-align:right; }
@@ -118,19 +154,25 @@
 
     .summary { font-size:0.95rem; }
     .summary strong { font-size:1.1rem; }
+
     .small { font-size:0.8rem; color:#555; }
+
     .badge {
       display:inline-block;
       padding:2px 6px;
       border-radius:999px;
       font-size:0.75rem;
-      background:#e9f7ef;
+      background:#e4ecff;
+      color:#123055;
       margin-left:4px;
     }
+
     .log-list { max-height:150px; overflow-y:auto; font-size:0.85rem; }
     .log-entry { border-bottom:1px solid #eee; padding:3px 0; }
     .log-time { color:#666; font-size:0.8rem; }
+
     .category-block { margin-bottom:8px; }
+
     .category-header {
       display:flex;
       align-items:center;
@@ -142,14 +184,16 @@
       font-size:0.75rem;
       padding:2px 8px;
       border-radius:999px;
-      background:#e0f3e0;
-      color:#145a32;
+      background:#e0ebff;
+      color:#123055;
     }
   </style>
 </head>
 <body>
+  <!-- Header mit Wappen -->
   <header class="app-header">
     <div class="app-logo">
+      <!-- Datei muss im Repo als wappen.png liegen -->
       <img src="wappen.png" alt="Vereinswappen">
     </div>
     <div>
@@ -170,6 +214,7 @@
     </div>
   </div>
 
+  <!-- Admin-Bereich -->
   <div class="card hidden" id="adminPanel">
     <h2>Artikel anlegen (Admin)</h2>
     <label for="itemName">Name</label>
@@ -190,10 +235,11 @@
     <div class="small">
       Artikel werden im Browser dieses Geräts gespeichert.<br>
       Über Export kannst du die Liste als JSON teilen.<br>
-      Über „Profil-Code erzeugen“ bekommst du Code für PROFILES oben im Skript.
+      Über „Profil-Code erzeugen“ bekommst du Code für PROFILES.
     </div>
   </div>
 
+  <!-- Artikel-Auswahl -->
   <div class="card">
     <h2>Artikel auswählen</h2>
 
@@ -220,10 +266,11 @@
       Tippen = in Warenkorb.<br>
       ⚙️ = bearbeiten/löschen (nur Admin).<br>
       Beim Import kannst du ENTWEDER den langen Text einfügen<br>
-      ODER einfach <strong>stockschiessen</strong> (oder dein eigenes Profil) eintippen.
+      ODER z.B. <strong>stockschiessen</strong> als Profilnamen.
     </div>
   </div>
 
+  <!-- Warenkorb -->
   <div class="card">
     <h2>Warenkorb</h2>
     <table class="cart-table">
@@ -247,6 +294,7 @@
     </div>
   </div>
 
+  <!-- Buchungen -->
   <div class="card">
     <h2>Heutige Buchungen</h2>
     <div class="log-list" id="logList">
@@ -596,7 +644,7 @@
     prompt("Artikel-Daten kopieren und am anderen Gerät importieren:", data);
   }
 
-  // NEU: Profil-Code Generator
+  // Profil-Code Generator (für PROFILES)
   function generateProfileCode() {
     if (!items || items.length === 0) {
       alert("Keine Artikel vorhanden – zuerst Artikel anlegen oder importieren.");
@@ -633,6 +681,7 @@
     const trimmed = data.trim();
     const key = trimmed.toLowerCase();
 
+    // Profil?
     if (PROFILES[key]) {
       items = PROFILES[key].map(it => normalizeItem({ ...it }));
       saveItems(items);
@@ -644,6 +693,7 @@
       return;
     }
 
+    // sonst JSON
     try {
       const imported = JSON.parse(trimmed);
       if (!Array.isArray(imported)) throw new Error("Kein Array");
